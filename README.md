@@ -2,9 +2,13 @@
 # OsgShxText
 OsgShxText provide OpenSceneGraph(OSG) text node which use AutoCAD shx font.
 
-**Note**:
+**Note to build this example with CMake**:
 1. Need OSG version >= 3.6
-2. Put shx font file in ACAD\Fonts relative to osg executable path, such as OpenSceneGraph-3.6.2\build\bin\ACAD\Fonts
+2. Put these files in OpenSceneGraph-3.6.2\examples\osgshxtext
+3. Modify OpenSceneGraph-3.6.2\examples\CMakeLists.txt:
+   Add the below line:
+    ADD_SUBDIRECTORY(osgshxtext)
+4. Put shx font file in ACAD\Fonts relative to osg executable path, such as OpenSceneGraph-3.6.2\build\bin\ACAD\Fonts
 
 It's usage is similar to osgText::Text:
 ```cpp
