@@ -1,6 +1,7 @@
 
 # OsgShxText
 OsgShxText provide OpenSceneGraph(OSG) text node which use AutoCAD shx font.
+
 **Note**:
 1. Need OSG version >= 3.6
 2. Put shx font file in ACAD\Fonts relative to osg executable path, such as OpenSceneGraph-3.6.2\build\bin\ACAD\Fonts
@@ -50,3 +51,47 @@ for (int i = 0; i < rowColSize; ++i)
     }
 }
 ```
+It contains a shx font parser. If you provide a IGlyphCallback implementation, you can draw shx font in any graphics system such as GDI or DirectX.
+```cpp
+#include <Windows.h>
+class GdiGlyphCallback : public IGlyphCallback
+{
+    GdiGlyphCallback(HDC hdc)
+    {
+        _hdc = hdc;
+    }
+    void glBegin(int mode)
+    {
+        assert(mode == GL_LINE_STRIP);
+        _firstPoint = true;
+    }
+
+    void glVertex2d(double x, double y)
+    {
+        if (_firstPoint)
+        {
+            MoveToEx(_hdc, x, y, nullptr);
+            _firstPoint = false;
+        }
+        else
+        {
+            LineTo(_hdc, x, y);
+        }
+    }
+
+    void glEnd()
+    {
+    }
+private:
+    HDC _hdc;
+    bool _firstPoint;
+};
+
+CRegBigFontShxParser shxParser;
+shxParser.Init("hztxt_e.shx", "hztxt.shx");
+shxParser.SetTextHeight(20);
+GdiGlyphCallback gdiCallback(hdc);
+shxParser.DrawText(&gdiCallback, L"Hello, 中国", 0, 0);
+
+```
+
