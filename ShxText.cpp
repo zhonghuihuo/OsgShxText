@@ -413,22 +413,33 @@ bool ShxText::computeMatrix(osg::Matrix& matrix, osg::State* state) const
     {
         if (!m_MatrixValid || (_characterSizeMode != OBJECT_COORDS || _autoRotateToScreen))
         {
-            m_MatrixValid = true;
+            if (_characterSizeMode == OBJECT_COORDS && !_autoRotateToScreen)
+                m_MatrixValid = true;
             matrix.makeTranslate(offset);
             osg::Vec3 scaleVec(pp, pp, pp);
             matrix.postMultScale(scaleVec);
             matrix.postMultRotate(_rotation);
             matrix.postMultTranslate(_position);
         }
+        else
+        {
+            matrix = _matrix;
+        }
     }
     else
     {
         if (!m_MatrixValid || (_characterSizeMode != OBJECT_COORDS || _autoRotateToScreen))
         {
+            if (_characterSizeMode == OBJECT_COORDS && !_autoRotateToScreen)
+                m_MatrixValid = true;
             matrix.makeTranslate(offset);
             osg::Vec3 scaleVec(pp, pp, pp);
             matrix.postMultScale(scaleVec);
             matrix.postMultTranslate(_position);
+        }
+        else
+        {
+            matrix = _matrix;
         }
     }
 
