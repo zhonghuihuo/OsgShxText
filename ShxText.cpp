@@ -160,6 +160,25 @@ void ShxText::setText(const std::wstring& text) {
     if (LEFT != _alignment / 3)
         m_MatrixValid = false;
     _text = text;
+
+    // _text = _text.trim();
+    auto pos = _text.find_first_not_of(L" \t\r\n");
+    if (pos != std::wstring::npos)
+        _text = _text.substr(pos);
+    pos = _text.find_last_not_of(L" \t\r\n");
+    if (pos != std::wstring::npos)
+        _text = _text.substr(0, pos + 1);
+
+    // record all '\n' positions
+    _lineStops.clear();
+    pos = 0;
+    while ((pos = _text.find_first_of(L'\n', pos)) != std::wstring::npos)
+    {
+        _lineStops.push_back(int(pos));
+        ++pos;
+    }
+    _lineStops.push_back(int(_text.size()));
+    _lineCount = unsigned int(_lineStops.size());
 }
 
 void ShxText::calEmGlyph() const
@@ -172,7 +191,21 @@ void ShxText::calEmGlyph() const
 	CRegBigFontShxParser shxParser;
 	shxParser.Init(m_RegFontFile.c_str(), m_BigFontFile.c_str());
 	shxParser.SetTextHeight(m_EmHeight);
-	m_EmGlyphLength = shxParser.GetTextExtent(_text.c_str());
+    wchar_t* data = const_cast<wchar_t*>(_text.c_str());
+    wchar_t* cur = data;
+    for (unsigned int i = 0; i < _lineCount; ++i)
+    {
+        // Is it safe to change std::wstring temporarily?
+        wchar_t c = data[_lineStops[i]];
+        if (c != L'\0')
+            data[_lineStops[i]] = L'\0';
+	    auto textLen = shxParser.GetTextExtent(cur);
+        if (textLen > m_EmGlyphLength)
+            m_EmGlyphLength = textLen;
+        if (c != L'\0')
+            data[_lineStops[i]] = c;
+        cur += _lineStops[i] + 1;
+    }
 
     m_EmGlyphLengthValid = true;
 }
@@ -229,7 +262,19 @@ void ShxText::build()
             CRegBigFontShxParser shxParser;
             shxParser.Init(m_RegFontFile.c_str(), m_BigFontFile.c_str());
             shxParser.SetTextHeight(m_EmHeight);
-            shxParser.DrawText(static_cast<IGlyphCallback*>(const_cast<ShxText*>(this)), _text.c_str(), 0, 0);
+            wchar_t* data = const_cast<wchar_t*>(_text.c_str());
+            wchar_t* cur = data;
+            for (unsigned int i = 0; i < _lineCount; ++i)
+            {
+                // Is it safe to change std::wstring temporarily?
+                wchar_t c = data[_lineStops[i]];
+                if (c != L'\0')
+                    data[_lineStops[i]] = L'\0';
+                shxParser.DrawText(static_cast<IGlyphCallback*>(const_cast<ShxText*>(this)), cur, 0, (_lineCount - 1 - i) * _lineSpacing * m_EmHeight);
+                if (c != L'\0')
+                    data[_lineStops[i]] = c;
+                cur += _lineStops[i] + 1;
+            }
         }
 
         _coords->dirty();

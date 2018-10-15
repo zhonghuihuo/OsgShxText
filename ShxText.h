@@ -30,6 +30,7 @@ public:
 	void setFontFile(const char* Reg_Uni_ShxFile, const char* Big_ShxFile);
 
 	const std::wstring& getText() const { return _text; }
+    //multiline text is supported, but only \n is allowed, \r is not allowed.
 	void setText(const std::wstring& text);
 
     /** Set the rendered character size in object coordinates.*/

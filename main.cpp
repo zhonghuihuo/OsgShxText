@@ -39,6 +39,10 @@
 #include <osgGA/TrackballManipulator>
 
 const int rowColSize = 5;
+const int textHeight = 15;
+const float lineSpacing = 1.5f;
+const float rowHeight = 2 * lineSpacing * textHeight;
+const float colWidth = 200;
 osg::Group* createTexts()
 {
 	osg::ref_ptr<osg::Group> pGroup = new osg::Group;
@@ -58,14 +62,14 @@ osg::Group* createTexts()
         {
 #define TextType ShxText
             osg::ref_ptr<ShxText> pText = new ShxText();
-            pText->setCharacterSize(15);
-            pText->SetText(L"Hello, 中国");
-            pText->SetFontFile("hztxt_e.shx", "hztxt.shx");//THFont.shx gbcbig.shx
+            pText->setCharacterSize(textHeight);
+            pText->setText(L"Hello, China\n你好, 中国");
+            pText->setFontFile("hztxt_e.shx", "hztxt.shx");//THFont.shx gbcbig.shx
 
             osg::ref_ptr<osg::Geometry> pLine = new osg::Geometry;
             osg::Vec2Array* pVertexArray = new osg::Vec2Array;
-            pVertexArray->push_back(osg::Vec2(100 * i, 20 * j));
-            pVertexArray->push_back(osg::Vec2(100 * i + pText->length(), 20 * j + 0));
+            pVertexArray->push_back(osg::Vec2(colWidth * i, pText->getLineCount() * rowHeight * j));
+            pVertexArray->push_back(osg::Vec2(colWidth * i + pText->length(), pText->getLineCount() * rowHeight * j + 0));
             pLine->setVertexArray(pVertexArray);
             osg::Vec3Array* pColorArray = new osg::Vec3Array(osg::Array::BIND_OVERALL);
             pColorArray->push_back(osg::Vec3(1, 1, 0));
@@ -74,7 +78,7 @@ osg::Group* createTexts()
 
 //#define TextType osgText::Text
             //osg::ref_ptr<osgText::Text> pText = new osgText::Text;
-            //pText->setText(L"Hello, 中国");
+            //pText->setText(L"Hello, China\n你好, 中国");
             //pText->setCharacterSize(10);
             //pText->setFont(font);
 
@@ -86,7 +90,7 @@ osg::Group* createTexts()
             if (j == 0)
                 pText->setRotation(osg::Quat(osg::PI_4f, osg::Z_AXIS));
 
-            pText->setPosition(osg::Vec3(100 * i, 20 * j, 0));
+            pText->setPosition(osg::Vec3(colWidth * i, pText->getLineCount() * rowHeight * j, 0));
 
             geode->addDrawable(pText);
         }
@@ -128,7 +132,7 @@ int main(int argc, char **argv)
 	// add the stats handler
 	viewer.addEventHandler(new osgViewer::StatsHandler);
 	osg::ref_ptr<osgGA::TrackballManipulator> man = new osgGA::TrackballManipulator();
-	man->setHomePosition(osg::Vec3d(50 * rowColSize, 10 * rowColSize, 150 * rowColSize), osg::Vec3d(50 * rowColSize, 10 * rowColSize, 0), osg::Vec3d(0, 1, 0));
+	man->setHomePosition(osg::Vec3d(colWidth * rowColSize / 2.0f, rowHeight * rowColSize / 2.0f, 3 * colWidth * rowColSize), osg::Vec3d(colWidth * rowColSize / 2.0f, rowHeight * rowColSize / 2.0f, 0), osg::Vec3d(0, 1, 0));
 	viewer.setCameraManipulator(man.get());
 	viewer.realize();
 
