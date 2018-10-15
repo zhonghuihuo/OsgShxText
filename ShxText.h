@@ -25,12 +25,12 @@ public:
     void setColor(const osg::Vec3& color);
     const osg::Vec3& getColor() const { return _color; }
 
-	const std::string& GetRegFontFile() const { return m_RegFontFile; }
-	const std::string& GetBigFontFile() const { return m_BigFontFile; }
-	void SetFontFile(const char* Reg_Uni_ShxFile, const char* Big_ShxFile);
+	const std::string& getRegFontFile() const { return m_RegFontFile; }
+	const std::string& getBigFontFile() const { return m_BigFontFile; }
+	void setFontFile(const char* Reg_Uni_ShxFile, const char* Big_ShxFile);
 
-	const std::wstring& GetText() const { return _text; }
-	void SetText(const std::wstring& text);
+	const std::wstring& getText() const { return _text; }
+	void setText(const std::wstring& text);
 
     /** Set the rendered character size in object coordinates.*/
     void setCharacterSize(float height);
@@ -127,6 +127,7 @@ private:
     osg::Quat                               _rotation;
     bool                                    _autoRotateToScreen;
     unsigned int                            _lineCount;
+    std::vector<int>                        _lineStops;
 
     mutable osg::Matrix                     _matrix;
     typedef osg::ref_ptr<osg::Vec2Array> Coords;

@@ -135,7 +135,7 @@ void ShxText::setColor(const osg::Vec3& color)
     }
 }
 
-void ShxText::SetFontFile(const char* Reg_Uni_ShxFile, const char* Big_ShxFile)
+void ShxText::setFontFile(const char* Reg_Uni_ShxFile, const char* Big_ShxFile)
 {
 	assert(Reg_Uni_ShxFile != nullptr && *Reg_Uni_ShxFile != '\0');
 	if (m_RegFontFile == Reg_Uni_ShxFile && m_BigFontFile == Big_ShxFile)
@@ -152,7 +152,7 @@ void ShxText::SetFontFile(const char* Reg_Uni_ShxFile, const char* Big_ShxFile)
 	CShxFileMapping::AddRef(Big_ShxFile);
 }
 
-void ShxText::SetText(const std::wstring& text) {
+void ShxText::setText(const std::wstring& text) {
 	if (text == _text)
 		return;
     m_EmGlyphLengthValid = false;
@@ -199,10 +199,10 @@ osg::Vec3f ShxText::emLeftBottom() const
 	switch(_alignment % 3)
 	{
 	case TOP:
-		dy = -m_EmHeight;
+		dy = -m_EmHeight * (1 + _lineSpacing * (_lineCount - 1));
 		break;
 	case VCENTER:
-		dy = -0.5*m_EmHeight;
+		dy = -0.5 * m_EmHeight * (1 + _lineSpacing * (_lineCount - 1));
 		break;
 	case BOTTOM:
 		dy = 0;
