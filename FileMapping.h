@@ -13,8 +13,8 @@ public:
 	const unsigned char* GetStart() const{ return m_pStart;}
 	const unsigned char* GetEnd() const{ return m_pEnd;}
 private:
-	HANDLE m_hFile;//打开的文件句柄
-	HANDLE m_hMapFile;//文件映射句柄
-	const unsigned char* m_pStart;//文件的起点映射至虚拟内存的位置
-	const unsigned char* m_pEnd;//文件的终点映射至虚拟内存的位置
+	HANDLE m_hFile;// file handle
+	HANDLE m_hMapFile;// file mapping handle
+	const unsigned char* m_pStart;//memory address which maps file beginning
+	const unsigned char* m_pEnd;//memory address which maps file end
 };

@@ -141,7 +141,7 @@ void CShxParser::Init(const char* FileName)
 		m_Type = UNIFONT;
 		m_GlyphCount = *(unsigned short*)&m_pStart[25];
 		m_pShapeDefs = &m_pStart[31];
-		//跳过Ansi字体说明文字，含尾0
+		//skip description of Ansi font，include trailing zero.
 		while(*m_pShapeDefs != 0)
 			++m_pShapeDefs;
 		++m_pShapeDefs;
@@ -191,7 +191,7 @@ void CShxParser::Init(const char* FileName)
 		else
 		{
 			m_Type = SHAPEFILE;
-			m_FontHeight = 4;//随便给的一个值
+			m_FontHeight = 4;// a value at will
 		}
 	}
 	else
@@ -226,22 +226,22 @@ void CShxParser::ParseGlyph(IGlyphCallback* pGlyphCallback, int character)
 		while((*pChar != character) && (count < m_IndexCount))
 		{
 			++count;
-			//跳过2字节形编号
+			//skip 2 bytes shape number
 			++pChar;
 			int defbytes = *pChar;
-			//跳过2字节形定义长度
+			//skip 2 bytes shape definition length
 			++pChar;
-			//跳过defbytes字节的形名称和形定义
+			//skip shape name and shape definition which are 'defbytes' length
 			pChar = (const unsigned short*)((char*)pChar + defbytes);
 		}
 		if(count >= m_IndexCount)
-			return;//没有找到该字符
+			return;//cant find this character
 
 		++pChar;
 		int defbytes = *pChar;
 		++pChar;
 		const unsigned char* pDefBytes = (const unsigned char*)pChar;
-		//跳过形名字
+		//skip shape name
 		while(*pDefBytes != 0)
 		{
 			++pDefBytes;
@@ -258,11 +258,11 @@ void CShxParser::ParseGlyph(IGlyphCallback* pGlyphCallback, int character)
 		while((*pChar != character) && (count < m_IndexCount))
 		{
 			++count;
-			//跳过8字节形索引项
+			//skip 8 btyes shape index entry
 			pChar += 4;
 		}
 		if(count >= m_IndexCount)
-			return;//没有找到该字符
+			return;//cant find this character
 
 		unsigned int offset = *(unsigned int*)(pChar+2);
 		int defbytes = *(pChar+1);
@@ -271,14 +271,14 @@ void CShxParser::ParseGlyph(IGlyphCallback* pGlyphCallback, int character)
 		if(pDefBytes >= m_pEnd)
 			return;
 
-		//跳过形名称，如果存在
+		//skip shape name, if exists
 		while(*pDefBytes != 0)
 		{
 			++pDefBytes;
 			--defbytes;
 		}
 		assert(*pDefBytes == 0);
-		//跳过0x00
+		//skip 0x00
 		++pDefBytes;
 		--defbytes;
 		ParseDefBytes(pGlyphCallback, pDefBytes, defbytes);
@@ -291,14 +291,14 @@ void CShxParser::ParseGlyph(IGlyphCallback* pGlyphCallback, int character)
 		while((*pChar != character) && (count < m_IndexCount))
 		{
 			++count;
-			//跳过2字节形编号
+			//skip 2 bytes shape number
 			++pChar;
 			OffsetFromFirstShapeDef += *pChar;
-			//跳过2字节形定义长度
+			//skip 2 bytes shape definition length
 			++pChar;
 		}
 		if(count >= m_IndexCount)
-			return;//没有找到该字符
+			return;//cant find this character
 
 		int defbytes = *(pChar+1);
 		const unsigned char* pFirstShapeDef = (const unsigned char*)m_pIndice + 4*m_IndexCount;
@@ -307,14 +307,14 @@ void CShxParser::ParseGlyph(IGlyphCallback* pGlyphCallback, int character)
 		if(pDefBytes >= m_pEnd)
 			return;
 
-		//跳过形名称，如果存在
+		//skip shape name, if exists
 		while(*pDefBytes != 0)
 		{
 			++pDefBytes;
 			--defbytes;
 		}
 		assert(*pDefBytes == 0);
-		//跳过0x00
+		//skip0x00
 		++pDefBytes;
 		--defbytes;
 		ParseDefBytes(pGlyphCallback, pDefBytes, defbytes);
@@ -341,40 +341,40 @@ void CShxParser::ParseOneCode(IGlyphCallback* pGlyphCallback, const unsigned cha
 	--defbytes;
 	switch(code)
 	{
-	case 0://结束码
+	case 0://EOF code
 		return;
-	case 1://绘制模式打开
+	case 1://enable draw mode
 		m_bDrawMode = true;
 		break;
-	case 2://绘制模式关闭
+	case 2://disable draw mode
 		m_bDrawMode = false;
 		break;
-	case 3://将比例系数除以下一个字节
+	case 3://divide scale by next byte
 		{
 			unsigned char num = *pDefBytes;
 			m_Scale /= num;
-			//跳过下一个字节
+			//skip next byte
 			++pDefBytes;
 			--defbytes;
 		}
 		break;
-	case 4://将比例系数乘以下一个字节
+	case 4://times scale by next byte
 		{
 			unsigned char num = *pDefBytes;
 			m_Scale *= num;
-			//跳过下一个字节
+			//skip next byte
 			++pDefBytes;
 			--defbytes;
 		}
 		break;
-	case 5://把当前笔位置压栈
+	case 5://push pen position into stack
 		m_PenPosStack.push(m_PenX);
 		m_PenPosStack.push(m_PenY);
 		break;
-	case 6://弹出当前笔位置
+	case 6://pop up pen position
 		{
 			int size = (int)m_PenPosStack.size();
-			if(size > 1)//如果字体设计正确，本来不必加上这个保护的．
+			if(size > 1)//If font design is correct, this isn't necessary.
 			{
 				m_PenY = m_PenPosStack.top();
 				m_PenPosStack.pop();
@@ -390,21 +390,21 @@ void CShxParser::ParseOneCode(IGlyphCallback* pGlyphCallback, const unsigned cha
 			}
 		}
 		break;
-	case 7://绘制编号由下一个或两个字节指定的子形
+	case 7://draw subshape which is designated by next 1 or 2 bytes
 		{
 			//double tempScale = m_Scale;
 			int character;
 			if(m_Type == UNIFONT)
 			{
 				character = *(unsigned short*)pDefBytes;
-				//跳过后两个字节
+				//skip next 2 bytes
 				pDefBytes += 2;
 				defbytes -= 2;
 			}
 			else
 			{
 				character = *pDefBytes;
-				//跳过后一个字节
+				//skip next byte
 				++pDefBytes;
 				--defbytes;
 			}
@@ -412,14 +412,14 @@ void CShxParser::ParseOneCode(IGlyphCallback* pGlyphCallback, const unsigned cha
 			//m_Scale = tempScale;
 		}
 		break;
-	case 8://后两个有符号字节表示移动的x，y距离
+	case 8://next 2 bytes stands for signed offset (x, y)
 		Case_Code_8(pGlyphCallback, pDefBytes, defbytes);
 		break;
-	case 9://后面一系列两个有符号字节表示移动的x，y距离，直到（0，0）终止
+	case 9://a series of 2 bytes stands for signed offset (x, y), until (0，0)
 		while(Case_Code_8(pGlyphCallback, pDefBytes, defbytes))
 			;
 		break;
-	case 0xA://用下两个字节定义一个八分圆弧
+	case 0xA://next 2 bytes defines a eighth arc
 		{
 			int radius = *pDefBytes;
 			++pDefBytes;
@@ -445,12 +445,12 @@ void CShxParser::ParseOneCode(IGlyphCallback* pGlyphCallback, const unsigned cha
 			{
 				if(C == 0)
 					C = 8;
-				//不必判断m_bDrawMode，因为字体设计者不可能用这种复杂的方式移动笔
+				//No need to judge m_bDrawMode, because font designer won't use this complex mode to move pen
 				DrawArc(pGlyphCallback, CenterX, CenterY, r, S*45.0/180.0*M_PI, C*45.0/180.0*M_PI);
 			}
 		}
 		break;
-	case 0xB://用下五个字节定义一个不规则圆弧
+	case 0xB://next 5 bytes defines a irregular arc
 		{
 			int start_offset = *pDefBytes;
 			++pDefBytes;
@@ -488,7 +488,7 @@ void CShxParser::ParseOneCode(IGlyphCallback* pGlyphCallback, const unsigned cha
 			m_PenY = CenterY + r*sin(EA);
 			if(pGlyphCallback)
 			{
-				//不必判断m_bDrawMode，因为字体设计者不可能用这种复杂的方式移动笔
+				//No need to judge m_bDrawMode, because font designer won't use this complex mode to move pen
 				DrawArc(pGlyphCallback, CenterX, CenterY, r, S*45.0/180.0*M_PI, C*45.0/180.0*M_PI);
 			}
 		}
@@ -500,13 +500,13 @@ void CShxParser::ParseOneCode(IGlyphCallback* pGlyphCallback, const unsigned cha
 		while(Case_Code_C(pGlyphCallback, pDefBytes, defbytes))
 			;
 		break;
-	case 0xE://下一代码被忽略
+	case 0xE://ignore next code
 		{
 			double X = m_PenX;
 			double Y = m_PenY;
 			bool bDrawMode = m_bDrawMode;
 			ParseOneCode(false, pDefBytes, defbytes);
-			m_bDrawMode = bDrawMode;//见Bold.shx::0x30就用14控制了可见性
+			m_bDrawMode = bDrawMode;//See Bold.shx::0x30. It use 0xE(14) to control visibility
 			m_PenX = X;
 			m_PenY = Y;
 		}
@@ -527,13 +527,13 @@ bool CShxParser::Case_Code_8(IGlyphCallback* pGlyphCallback, const unsigned char
 	char* pChar = (char*)pDefBytes;
 	int dx = (*pChar);
 	m_PenX += m_Scale * dx;
-	//跳过x
+	//skip x
 	++pDefBytes;
 	--defbytes;
 	pChar = (char*)pDefBytes;
 	int dy = (*pChar);
 	m_PenY += m_Scale * dy;
-	//跳过y
+	//skip y
 	++pDefBytes;
 	--defbytes;
 	if((dx != 0) || (dy != 0))
@@ -549,13 +549,13 @@ bool CShxParser::Case_Code_C(IGlyphCallback* pGlyphCallback, const unsigned char
 	char* pChar = (char*)pDefBytes;
 	double X = m_PenX;
 	int dx_noscale = (*pChar);
-	//跳过x
+	//skip x
 	++pDefBytes;
 	--defbytes;
 	pChar = (char*)pDefBytes;
 	double Y = m_PenY;
 	int dy_noscale = (*pChar);
-	//跳过y
+	//skip y
 	++pDefBytes;
 	--defbytes;
 
@@ -569,7 +569,7 @@ bool CShxParser::Case_Code_C(IGlyphCallback* pGlyphCallback, const unsigned char
 		double dist = sqrt(dx*dx + dy*dy);
 		if(pGlyphCallback)
 		{
-			//不必判断m_bDrawMode，因为字体设计者不可能用这种复杂的方式移动笔
+			//No need to judge m_bDrawMode, because font designer won't use this complex mode to move pen
 			int bulge = *(char*)pDefBytes;
 			double ChordHeight = bulge * (dist / 2.0) / 127.0;
 			double radius;
@@ -595,7 +595,7 @@ bool CShxParser::Case_Code_C(IGlyphCallback* pGlyphCallback, const unsigned char
 				}
 			}
 		}
-		//跳过b
+		//skip b
 		++pDefBytes;
 		--defbytes;
 		return true;
@@ -717,7 +717,7 @@ double CShxParser::DrawText(IGlyphCallback* pGlyphCallback, const char* text, do
 		{
 			if(IsEscapeChar(*(unsigned char*)text))
 			{
-				//这里需要颠倒这两个字节，然后传给ParseGlyph
+				//here we need revert 2 bytes, then pass to ParseGlyph
 				char first =  *text;
 				char second = *(text+1);
 				unsigned short character = MAKEWORD(second, first);
@@ -829,13 +829,13 @@ bool CShxParser::ShowNextGlyph(IGlyphCallback* pGlyphCallback, double x, double 
 	{
 		const unsigned short* pChar = (const unsigned short*)m_pCurrentShapeDef;
 		character = *pChar;
-		//跳过2字节形编号
+		//skip 2 bytes shape number
 		++pChar;
 		int defbytes = *pChar;
-		//跳过2字节形定义长度
+		//skip 2 bytes shape definition length
 		++pChar;
 		const unsigned char* pDefBytes = (const unsigned char*)pChar;
-		//跳过形名字
+		//skip shape name
 		while(*pDefBytes != 0)
 		{
 			++pDefBytes;
@@ -857,14 +857,14 @@ bool CShxParser::ShowNextGlyph(IGlyphCallback* pGlyphCallback, double x, double 
 			const unsigned char* pDefBytes = (const unsigned char*)&m_pStart[offset];
 			if(pDefBytes < m_pEnd)
 			{
-				//跳过形名称，如果存在
+				//skip shape name, if exists
 				while(*pDefBytes != 0)
 				{
 					++pDefBytes;
 					--defbytes;
 				}
 				assert(*pDefBytes == 0);
-				//跳过0x00
+				//skip 0x00
 				++pDefBytes;
 				--defbytes;
 				ParseDefBytes(pGlyphCallback, pDefBytes, defbytes);
@@ -885,14 +885,14 @@ bool CShxParser::ShowNextGlyph(IGlyphCallback* pGlyphCallback, double x, double 
 		{
 			if(pDefBytes < m_pEnd)
 			{
-				//跳过形名称，如果存在
+				//skip shape name, if exists
 				while(*pDefBytes != 0)
 				{
 					++pDefBytes;
 					--defbytes;
 				}
 				assert(*pDefBytes == 0);
-				//跳过0x00
+				//skip 0x00
 				++pDefBytes;
 				--defbytes;
 				ParseDefBytes(pGlyphCallback, pDefBytes, defbytes);

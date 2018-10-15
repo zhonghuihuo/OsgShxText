@@ -47,12 +47,12 @@ CRegBigFontShxParser::~CRegBigFontShxParser(void)
 
 double CRegBigFontShxParser::DrawText(IGlyphCallback* pGlyphCallback, const char* text, double x, double y)
 {
-	//同步位置
+	//sync pen position in 2 files
 	m_RegFontShx.m_PenX = x;
 	m_RegFontShx.m_PenY = y;
 	m_BigFontShx.m_PenX = x;
 	m_BigFontShx.m_PenY = y;
-	//初始化比例
+	//initialize scale
 	m_BigFontShx.m_Scale = m_BigFontShx.m_TextHeight/m_BigFontShx.m_FontHeight;
 	m_RegFontShx.m_Scale = m_RegFontShx.m_TextHeight/m_RegFontShx.m_FontHeight;
 
@@ -65,16 +65,16 @@ double CRegBigFontShxParser::DrawText(IGlyphCallback* pGlyphCallback, const char
 	{
 		if(m_BigFontShx.m_Type != UNKNOWN && m_BigFontShx.IsEscapeChar(*(unsigned char*)text))
 		{
-			//这里需要颠倒这两个字节，然后传给ParseGlyph
+			//here we need revert 2 bytes, then pass to ParseGlyph
 			char first =  *text;
 			char second = *(text+1);
 			unsigned short character = MAKEWORD(second, first);
 			m_BigFontShx.ParseGlyph(pGlyphCallback, /**(unsigned short*)text*/character);
 			text += 2;
-			//同步位置
+			//sync pen position in 2 files
 			m_RegFontShx.m_PenX = m_BigFontShx.m_PenX;
 			m_RegFontShx.m_PenY = m_BigFontShx.m_PenY;
-			//同步比例
+			//sync scale in 2 files
 			m_RegFontShx.m_Scale = (m_RegFontShx.m_TextHeight/m_RegFontShx.m_FontHeight)*
 				(m_BigFontShx.m_Scale / (m_BigFontShx.m_TextHeight/m_BigFontShx.m_FontHeight));
 		}
@@ -82,10 +82,10 @@ double CRegBigFontShxParser::DrawText(IGlyphCallback* pGlyphCallback, const char
 		{
 			m_RegFontShx.ParseGlyph(pGlyphCallback, *(unsigned char*)text);
 			++text;
-			//同步位置
+			//sync pen position in 2 files
 			m_BigFontShx.m_PenX = m_RegFontShx.m_PenX;
 			m_BigFontShx.m_PenY = m_RegFontShx.m_PenY;
-			//同步比例
+			//sync scale in 2 files
 			m_BigFontShx.m_Scale = (m_BigFontShx.m_TextHeight/m_BigFontShx.m_FontHeight)*
 				(m_RegFontShx.m_Scale / (m_RegFontShx.m_TextHeight/m_RegFontShx.m_FontHeight));
 		}

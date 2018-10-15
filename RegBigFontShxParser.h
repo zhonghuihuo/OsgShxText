@@ -8,20 +8,19 @@
 class CRegBigFontShxParser
 {
 public:
-	//ShxFileName必须不带路径信息，会自动在AutoCAD的安装目录下的Fonts目录下寻找
+	//ShxFileName must be file name without directory. search under \AutoCAD\Fonts relative to program.
 	CRegBigFontShxParser(const char* Reg_Uni_ShxFile, const char* Big_ShxFile);
 	CRegBigFontShxParser(){}
 	void Init(const char* Reg_Uni_ShxFile, const char* Big_ShxFile);
 	void Cleanup();
 	~CRegBigFontShxParser(void);
-	//设置要绘制的字高
 	inline void SetTextHeight(double height);
 	inline double GetTextHeight();
 	inline double GetDescendHeight();
-	//在当前字高和字体下,text的宽度
+	//text length at current text height and font
 	inline double GetTextExtent(const char* text);
 	inline double GetTextExtent(const wchar_t* text);
-	//以(x,y)为左下角点在hdc上绘制文本text.
+	//draw text from left bottom (x,y)
 	double DrawText(IGlyphCallback* pGlyphCallback, const char* text, double x, double y);
 	double DrawText(IGlyphCallback* pGlyphCallback, const wchar_t* text, double x, double y);
 private:

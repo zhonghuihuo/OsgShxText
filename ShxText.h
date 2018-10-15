@@ -142,7 +142,7 @@ private:
 	static const float m_EmHeight;
 	mutable size_t m_startIndex;
 
-	//在变换之前，文字对齐点在(0,0,0)，文字方向为(1,0,0)，法线方向为(0,0,1)。
+	// Before setPosition and setRotation, text alignment point is (0,0,0)，text direction is (1,0,0)，normal is (0,0,1)
 	void calEmGlyph() const;
 	// when character height is m_EmHeight
 	osg::Vec3f emLeftBottom() const;

@@ -48,7 +48,7 @@ CShxFileMapping* CShxFileMapping::AddRef(const std::string& ShxFileName)
 	if(pObj->GetStart() == NULL)
 	{
 		delete pObj;
-		TRACE("没能打开AutoCAD字体文件:%s\n", FileName);
+		TRACE("Can't open AutoCAD font file: %s\n", FileName);
 		return NULL;
 	}
 	pObj->m_ShxFileName = ShxFileName;
