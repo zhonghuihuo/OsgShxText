@@ -1,5 +1,14 @@
 #pragma once
 
+/***************************************************************************
+* Copyright (C) 2017, Deping Chen, cdp97531@sina.com
+*
+* All rights reserved.
+* For permission requests, write to the author.
+*
+* This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+* KIND, either express or implied.
+***************************************************************************/
 #include <string>
 typedef void *HANDLE;
 class CFileMapping

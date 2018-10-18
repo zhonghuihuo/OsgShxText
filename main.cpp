@@ -1,21 +1,12 @@
-/* OpenSceneGraph example, osgshape.
+/***************************************************************************
+* Copyright (C) 2017, Deping Chen, cdp97531@sina.com
 *
-*  Permission is hereby granted, free of charge, to any person obtaining a copy
-*  of this software and associated documentation files (the "Software"), to deal
-*  in the Software without restriction, including without limitation the rights
-*  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-*  copies of the Software, and to permit persons to whom the Software is
-*  furnished to do so, subject to the following conditions:
+* All rights reserved.
+* For permission requests, write to the author.
 *
-*  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-*  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-*  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-*  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-*  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-*  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-*  THE SOFTWARE.
-*/
-
+* This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+* KIND, either express or implied.
+***************************************************************************/
 #include <osg/Geode>
 #include "ShxText.h"
 #include <osg/ShapeDrawable>
@@ -64,7 +55,7 @@ osg::Group* createTexts()
             osg::ref_ptr<ShxText> pText = new ShxText();
             pText->setCharacterSize(textHeight);
             pText->setText(L"Hello, China\nÄãºÃ, ÖÐ¹ú");
-            pText->setFontFile("hztxt_e.shx", "hztxt.shx");//THFont.shx gbcbig.shx
+            pText->setFontFile("txt.shx", "hztxt.shx");//THFont.shx gbcbig.shx
 
             osg::ref_ptr<osg::Geometry> pLine = new osg::Geometry;
             osg::Vec2Array* pVertexArray = new osg::Vec2Array;
