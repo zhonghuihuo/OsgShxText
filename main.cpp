@@ -29,6 +29,68 @@
 #include <osgViewer/ViewerEventHandlers>
 #include <osgGA/TrackballManipulator>
 
+
+class MyBBox : public osg::ShapeDrawable
+{
+public:
+    MyBBox(osg::Drawable* drawable = nullptr);
+    /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
+    MyBBox(const MyBBox& pg, const osg::CopyOp& copyop = osg::CopyOp::SHALLOW_COPY)
+        : osg::ShapeDrawable(pg, copyop)
+    {
+        m_box = new osg::Box(*pg.m_box);
+        setShape(m_box);
+        m_object = pg.m_object;
+    }
+
+    virtual Object* cloneType() const { return new MyBBox(); }
+    virtual Object* clone(const osg::CopyOp& copyop) const { return new MyBBox(*this, copyop); }
+    virtual bool isSameKindAs(const Object* obj) const { return dynamic_cast<const MyBBox*>(obj) != NULL; }
+    virtual const char* libraryName() const { return "osg"; }
+    virtual const char* className() const { return "MyBBox"; }
+
+    virtual void drawImplementation(osg::RenderInfo& renderInfo) const
+    {
+        osg::ShapeDrawable::drawImplementation(renderInfo);
+    }
+    osg::BoundingBox computeBoundingBox() const
+    {
+        return osg::ShapeDrawable::computeBoundingBox();
+    }
+
+    osg::ref_ptr<osg::Box> m_box;
+    osg::ref_ptr<osg::Drawable> m_object;
+};
+
+class UpdateBBox : public osg::Drawable::UpdateCallback
+{
+public:
+    virtual void update(osg::NodeVisitor*, osg::Drawable* drawable)
+    {
+        MyBBox* pBBox = dynamic_cast<MyBBox*>(drawable);
+        if (pBBox)
+        {
+            auto bbox = pBBox->m_object->getBoundingBox();
+            osg::Vec3 half(bbox.xMax() - bbox.xMin(), bbox.yMax() - bbox.yMin(), bbox.zMax() - bbox.zMin());
+            half /= 2.0;
+            pBBox->m_box->set(bbox.center(), half);
+            pBBox->dirtyBound();
+            pBBox->dirtyGLObjects();
+            pBBox->build();
+        }
+    }
+};
+
+MyBBox::MyBBox(osg::Drawable* drawable)
+{
+    auto ss = getOrCreateStateSet();
+    ss->setAttributeAndModes(new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE));
+    m_object = drawable;
+    m_box = new osg::Box(osg::Vec3(), 1.0f);
+    setShape(m_box.get());
+    setUpdateCallback(new UpdateBBox);
+}
+
 const int rowColSize = 5;
 const int textHeight = 15;
 const float lineSpacing = 1.5f;
@@ -53,14 +115,17 @@ osg::Group* createTexts()
         {
 #define TextType ShxText
             osg::ref_ptr<ShxText> pText = new ShxText();
-            pText->setCharacterSize(textHeight);
+            if (i == 3)
+                pText->setCharacterSize(textHeight, 0.75);
+            else
+                pText->setCharacterSize(textHeight);
             pText->setText(L"Hello, China\nÄãºÃ, ÖÐ¹ú");
             pText->setFontFile("txt.shx", "hztxt.shx");//THFont.shx gbcbig.shx
 
             osg::ref_ptr<osg::Geometry> pLine = new osg::Geometry;
             osg::Vec2Array* pVertexArray = new osg::Vec2Array;
             pVertexArray->push_back(osg::Vec2(colWidth * i, pText->getLineCount() * rowHeight * j));
-            pVertexArray->push_back(osg::Vec2(colWidth * i + pText->length(), pText->getLineCount() * rowHeight * j + 0));
+            pVertexArray->push_back(osg::Vec2(colWidth * i + pText->length(), pText->getLineCount() * rowHeight * j));
             pLine->setVertexArray(pVertexArray);
             osg::Vec3Array* pColorArray = new osg::Vec3Array(osg::Array::BIND_OVERALL);
             pColorArray->push_back(osg::Vec3(1, 1, 0));
@@ -77,6 +142,11 @@ osg::Group* createTexts()
                 pText->setCharacterSizeMode(TextType::SCREEN_COORDS);
             else if (i == 1)
                 pText->setCharacterSizeMode(TextType::OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT);
+            else if (i == 2)
+            {
+                pText->setCharacterSizeMode(TextType::SCREEN_COORDS);
+                pText->setAutoRotateToScreen(true);
+            }
 
             if (j == 0)
                 pText->setRotation(osg::Quat(osg::PI_4f, osg::Z_AXIS));
@@ -84,7 +154,9 @@ osg::Group* createTexts()
             pText->setPosition(osg::Vec3(colWidth * i, pText->getLineCount() * rowHeight * j, 0));
 
             geode->addDrawable(pText);
-        }
+            geode->addDrawable(new MyBBox(pText.get()));
+            
+       }
     }
     pGroup->addChild(geode);
 	return pGroup.release();

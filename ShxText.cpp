@@ -54,9 +54,10 @@ void ShxText::setCharacterSize(float height)
 void ShxText::setCharacterSize(float height, float widthRatio)
 {
     assert(widthRatio > 0);
-    if (_widthRatio != widthRatio)
+    if (_widthRatio != widthRatio && widthRatio >= 0.5)
     {
-        m_MatrixValid = false;
+        m_CoordsValid = false;
+        //m_EmGlyphLengthValid is unchanged.
         _widthRatio = widthRatio;
     }
     setCharacterSize(height);
@@ -197,23 +198,26 @@ void ShxText::calEmGlyph() const
 
 	m_EmGlyphLength = 0;
 
-	CRegBigFontShxParser shxParser;
-	shxParser.Init(m_RegFontFile.c_str(), m_BigFontFile.c_str());
-	shxParser.SetTextHeight(m_EmHeight);
-    wchar_t* data = const_cast<wchar_t*>(_text.c_str());
-    wchar_t* cur = data;
-    for (unsigned int i = 0; i < _lineCount; ++i)
+    if (!_text.empty())
     {
-        // Is it safe to change std::wstring temporarily?
-        wchar_t c = data[_lineStops[i]];
-        if (c != L'\0')
-            data[_lineStops[i]] = L'\0';
-	    auto textLen = shxParser.GetTextExtent(cur);
-        if (textLen > m_EmGlyphLength)
-            m_EmGlyphLength = textLen;
-        if (c != L'\0')
-            data[_lineStops[i]] = c;
-        cur += _lineStops[i] + 1;
+	    CRegBigFontShxParser shxParser;
+	    shxParser.Init(m_RegFontFile.c_str(), m_BigFontFile.c_str());
+	    shxParser.SetTextHeight(m_EmHeight);
+        wchar_t* data = const_cast<wchar_t*>(_text.c_str());
+        wchar_t* cur = data;
+        for (unsigned int i = 0; i < _lineCount; ++i)
+        {
+            // Is it safe to change std::wstring temporarily?
+            wchar_t c = data[_lineStops[i]];
+            if (c != L'\0')
+                data[_lineStops[i]] = L'\0';
+	        auto textLen = shxParser.GetTextExtent(cur);
+            if (textLen > m_EmGlyphLength)
+                m_EmGlyphLength = textLen;
+            if (c != L'\0')
+                data[_lineStops[i]] = c;
+            cur += _lineStops[i] + 1;
+        }
     }
 
     m_EmGlyphLengthValid = true;
@@ -263,26 +267,29 @@ void ShxText::build()
         m_CoordsValid = true;
         // reset all the properties.
         _coords = new osg::Vec2Array(osg::Array::Binding::BIND_PER_VERTEX);
-        const_cast<ShxText*>(this)->setVertexArray(_coords);
-        m_primitiveSet = new osg::MultiDrawArrays(GL_LINE_STRIP);
-        const_cast<ShxText*>(this)->getPrimitiveSetList().clear();
-        const_cast<ShxText*>(this)->addPrimitiveSet(m_primitiveSet);
+        if (!_text.empty())
         {
-            CRegBigFontShxParser shxParser;
-            shxParser.Init(m_RegFontFile.c_str(), m_BigFontFile.c_str());
-            shxParser.SetTextHeight(m_EmHeight);
-            wchar_t* data = const_cast<wchar_t*>(_text.c_str());
-            wchar_t* cur = data;
-            for (unsigned int i = 0; i < _lineCount; ++i)
+            const_cast<ShxText*>(this)->setVertexArray(_coords);
+            m_primitiveSet = new osg::MultiDrawArrays(GL_LINE_STRIP);
+            const_cast<ShxText*>(this)->getPrimitiveSetList().clear();
+            const_cast<ShxText*>(this)->addPrimitiveSet(m_primitiveSet);
             {
-                // Is it safe to change std::wstring temporarily?
-                wchar_t c = data[_lineStops[i]];
-                if (c != L'\0')
-                    data[_lineStops[i]] = L'\0';
-                shxParser.DrawText(static_cast<IGlyphCallback*>(const_cast<ShxText*>(this)), cur, 0, (_lineCount - 1 - i) * _lineSpacing * m_EmHeight);
-                if (c != L'\0')
-                    data[_lineStops[i]] = c;
-                cur += _lineStops[i] + 1;
+                CRegBigFontShxParser shxParser;
+                shxParser.Init(m_RegFontFile.c_str(), m_BigFontFile.c_str());
+                shxParser.SetTextHeight(m_EmHeight);
+                wchar_t* data = const_cast<wchar_t*>(_text.c_str());
+                wchar_t* cur = data;
+                for (unsigned int i = 0; i < _lineCount; ++i)
+                {
+                    // Is it safe to change std::wstring temporarily?
+                    wchar_t c = data[_lineStops[i]];
+                    if (c != L'\0')
+                        data[_lineStops[i]] = L'\0';
+                    shxParser.DrawText(static_cast<IGlyphCallback*>(const_cast<ShxText*>(this)), cur, 0, (_lineCount - 1 - i) * _lineSpacing * m_EmHeight);
+                    if (c != L'\0')
+                        data[_lineStops[i]] = c;
+                    cur += _lineStops[i] + 1;
+                }
             }
         }
 
@@ -422,7 +429,9 @@ bool ShxText::computeMatrix(osg::Matrix& matrix, osg::State* state) const
                 height = static_cast<value_type>(viewport->height());
             }
 
-            osg::Matrix mvpw = rotate_matrix * modelview * projection * osg::Matrix::scale(width / 2.0, height / 2.0, 1.0);
+            osg::Matrix mvpw = modelview * projection * osg::Matrix::scale(width / 2.0, height / 2.0, 1.0);
+            if (_autoRotateToScreen)
+                mvpw = rotate_matrix * mvpw;
 
             osg::Vec3d origin = osg::Vec3d(0.0, 0.0, 0.0) * mvpw;
             osg::Vec3d left = osg::Vec3d(1.0, 0.0, 0.0) * mvpw - origin;
@@ -461,7 +470,6 @@ bool ShxText::computeMatrix(osg::Matrix& matrix, osg::State* state) const
         }
 
         matrix.postMultTranslate(_position);
-
     }
     else if (!_rotation.zeroRotation() && !m_MatrixValid)
     {
@@ -509,7 +517,7 @@ bool ShxText::computeMatrix(osg::Matrix& matrix, osg::State* state) const
 float ShxText::emLength() const
 {
 	calEmGlyph();
-	return m_EmGlyphLength;
+	return m_EmGlyphLength * _widthRatio;
 }
 
 osg::BoundingBox ShxText::computeBoundingBox() const
@@ -520,10 +528,9 @@ osg::BoundingBox ShxText::computeBoundingBox() const
     {
         osg::Matrix modelview;
         computeMatrix(modelview, nullptr);
-        auto lb = emLeftBottom();
         auto len = emLength();
         osg::BoundingBox  tmp;
-        tmp.set(lb.x(), lb.y(), lb.z(), lb.x() + len, lb.y() + _lineCount * _characterHeight, lb.z());
+        tmp.set(0, 0, 0, len, m_EmHeight * (1 + _lineSpacing * (_lineCount - 1)), 0);
         bbox.expandBy(tmp.corner(0)*_matrix);
         bbox.expandBy(tmp.corner(1)*_matrix);
         bbox.expandBy(tmp.corner(2)*_matrix);
@@ -547,7 +554,7 @@ void ShxText::glBegin(int mode)
 void ShxText::glVertex2d(double x, double y)
 {
 	auto _vertices = dynamic_cast<osg::Vec2Array*>(getVertexArray());
-	_vertices->push_back(osg::Vec2(x, y));
+	_vertices->push_back(osg::Vec2(x * _widthRatio, y));
 }
 
 void ShxText::glEnd()

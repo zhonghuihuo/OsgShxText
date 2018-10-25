@@ -74,7 +74,8 @@ public:
     float getLineSpacing() const { return _lineSpacing; }
 
 
-
+    // Don't call setPosition if you call setAutoRotateToScreen(true), setCharacterSizeMode(SCREEN_COORDS),
+    // or setCharacterSizeMode(OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT)
     /** Set the position of text.*/
     void setPosition(const osg::Vec3& pos);
 
