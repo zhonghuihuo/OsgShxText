@@ -53,8 +53,9 @@ void ShxText::setCharacterSize(float height)
 
 void ShxText::setCharacterSize(float height, float widthRatio)
 {
-    assert(widthRatio > 0);
-    if (_widthRatio != widthRatio && widthRatio >= 0.5)
+    const float minFactor = 0.5f;
+    assert(widthRatio >= minFactor);
+    if (_widthRatio != widthRatio && widthRatio >= minFactor)
     {
         m_CoordsValid = false;
         //m_EmGlyphLengthValid is unchanged.
