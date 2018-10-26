@@ -310,7 +310,7 @@ void ShxText::build()
 
 void ShxText::drawImplementation(osg::RenderInfo& renderInfo) const
 {
-    if (!m_CoordsValid || !m_ColorsValid)
+    if (!m_CoordsValid || !m_ColorsValid || _text.empty())
         return;
     osg::State& state = *renderInfo.getState();
 
