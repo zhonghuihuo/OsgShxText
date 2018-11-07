@@ -163,7 +163,7 @@ private:
 
 	friend class CRegBigFontShxParser;
 	friend class CShxParser;
-    friend class ShxTextUpdateCallback;
+    friend class ShxTextCallback;
 
 	/** method to invoke to rebuild the geometry that renders the text.*/
 	void build();

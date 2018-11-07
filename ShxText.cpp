@@ -16,10 +16,11 @@
 #include <osg/PrimitiveSet>
 #include <osg/GLExtensions>
 #include <osg/State>
+#include <osgUtil/CullVisitor>
 
 #undef DrawText
 
-class ShxTextUpdateCallback : public osg::NodeCallback
+class ShxTextCallback : public osg::NodeCallback
 {
     void operator()(osg::Node* node, osg::NodeVisitor* nv)
     {
@@ -28,6 +29,13 @@ class ShxTextUpdateCallback : public osg::NodeCallback
             auto text = static_cast<ShxText*>(node);
             text->build();
         }
+        else if(nv->getVisitorType() == osg::NodeVisitor::CULL_VISITOR)
+        {
+            osgUtil::CullVisitor* cv = static_cast<osgUtil::CullVisitor*>(nv);
+            auto text = static_cast<ShxText*>(node);
+            osg::Matrix matrix;
+            text->computeMatrix(matrix, cv->getState());
+        }
         // must call any nested node callbacks and continue subgraph traversal.
         NodeCallback::traverse(node, nv);
     }
@@ -35,6 +43,7 @@ class ShxTextUpdateCallback : public osg::NodeCallback
 
 namespace
 {
+    osg::ref_ptr<ShxTextCallback> s_ShxTextCallback(new ShxTextCallback);
     enum { LEFT, CENTER, RIGHT };
     enum { TOP, VCENTER, BOTTOM };
 }
@@ -88,7 +97,9 @@ ShxText::ShxText(void)
     , m_startIndex(0)
 {
     setUseVertexBufferObjects(true);
-    setUpdateCallback(new ShxTextUpdateCallback);
+
+    setUpdateCallback(s_ShxTextCallback);
+    setCullCallback(s_ShxTextCallback);
 }
 
 ShxText::ShxText(const ShxText& st, const osg::CopyOp& copyop)
@@ -120,7 +131,9 @@ ShxText::ShxText(const ShxText& st, const osg::CopyOp& copyop)
     setColorArray(_colors);
     addPrimitiveSet(m_primitiveSet);
     setUseVertexBufferObjects(true);
-    setUpdateCallback(new ShxTextUpdateCallback);
+    
+    setUpdateCallback(s_ShxTextCallback);
+    setCullCallback(s_ShxTextCallback);
 }
 
 ShxText::~ShxText(void)
@@ -527,8 +540,8 @@ osg::BoundingBox ShxText::computeBoundingBox() const
 
     if (!m_RegFontFile.empty() && !_text.empty())
     {
-        osg::Matrix modelview;
-        computeMatrix(modelview, nullptr);
+        //osg::Matrix modelview;
+        //computeMatrix(modelview, nullptr);
         auto len = emLength();
         osg::BoundingBox  tmp;
         tmp.set(0, 0, 0, len, m_EmHeight * (1 + _lineSpacing * (_lineCount - 1)), 0);
