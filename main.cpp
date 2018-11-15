@@ -122,15 +122,15 @@ osg::Group* createTexts()
             pText->setText(L"Hello, China\nÄãºÃ, ÖÐ¹ú");
             pText->setFontFile("txt.shx", "hztxt.shx");//THFont.shx gbcbig.shx
 
-            osg::ref_ptr<osg::Geometry> pLine = new osg::Geometry;
-            osg::Vec2Array* pVertexArray = new osg::Vec2Array;
-            pVertexArray->push_back(osg::Vec2(colWidth * i, pText->getLineCount() * rowHeight * j));
-            pVertexArray->push_back(osg::Vec2(colWidth * i + pText->length(), pText->getLineCount() * rowHeight * j));
-            pLine->setVertexArray(pVertexArray);
-            osg::Vec3Array* pColorArray = new osg::Vec3Array(osg::Array::BIND_OVERALL);
-            pColorArray->push_back(osg::Vec3(1, 1, 0));
-            pLine->addPrimitiveSet(new osg::DrawArrays(GL_LINE_STRIP, 0, 2));
-            geode->addDrawable(pLine);
+            //osg::ref_ptr<osg::Geometry> pLine = new osg::Geometry;
+            //osg::Vec2Array* pVertexArray = new osg::Vec2Array;
+            //pVertexArray->push_back(osg::Vec2(colWidth * i, pText->getLineCount() * rowHeight * j));
+            //pVertexArray->push_back(osg::Vec2(colWidth * i + pText->length(), pText->getLineCount() * rowHeight * j));
+            //pLine->setVertexArray(pVertexArray);
+            //osg::Vec3Array* pColorArray = new osg::Vec3Array(osg::Array::BIND_OVERALL);
+            //pColorArray->push_back(osg::Vec3(1, 1, 0));
+            //pLine->addPrimitiveSet(new osg::DrawArrays(GL_LINE_STRIP, 0, 2));
+            //geode->addDrawable(pLine);
 
 //#define TextType osgText::Text
             //osg::ref_ptr<osgText::Text> pText = new osgText::Text;
@@ -147,6 +147,8 @@ osg::Group* createTexts()
                 pText->setCharacterSizeMode(TextType::SCREEN_COORDS);
                 pText->setAutoRotateToScreen(true);
             }
+            pText->showBox(true);
+            pText->setBoxMargin(6);
 
             if (j == 0)
                 pText->setRotation(osg::Quat(osg::PI_4f, osg::Z_AXIS));
@@ -154,7 +156,7 @@ osg::Group* createTexts()
             pText->setPosition(osg::Vec3(colWidth * i, pText->getLineCount() * rowHeight * j, 0));
 
             geode->addDrawable(pText);
-            geode->addDrawable(new MyBBox(pText.get()));
+            //geode->addDrawable(new MyBBox(pText.get()));
             
        }
     }

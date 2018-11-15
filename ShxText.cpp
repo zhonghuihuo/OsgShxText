@@ -69,6 +69,13 @@ void ShxText::setCharacterSize(float height, float widthRatio)
         m_CoordsValid = false;
         //m_EmGlyphLengthValid is unchanged.
         _widthRatio = widthRatio;
+        if (m_box && m_box->getCount() == 4)
+        {
+            int first = m_box->getFirst();
+            double len = emLength();
+            double margin = _margin / _characterHeight * m_EmHeight;
+            (*_coords)[first + 1].x() = (*_coords)[first + 2].x() = len + margin;
+        }
     }
     setCharacterSize(height);
 }
@@ -86,10 +93,13 @@ ShxText::ShxText(void)
     , _position()
     , _rotation()
     , _autoRotateToScreen(false)
+    , _showBox(false)
+    , _margin(0.f)
     , _lineCount(1)
     , _coords()
     , _colors()
     , m_primitiveSet(new osg::MultiDrawArrays(GL_LINE_STRIP))
+    , m_box(new osg::DrawArrays())
     , m_EmGlyphLengthValid(false)
     , m_CoordsValid(false)
     , m_ColorsValid(false)
@@ -116,11 +126,14 @@ ShxText::ShxText(const ShxText& st, const osg::CopyOp& copyop)
     , _position(st._position)
     , _rotation(st._rotation)
     , _autoRotateToScreen(st._autoRotateToScreen)
+    , _showBox(st._showBox)
+    , _margin(st._margin)
     , _lineCount(st._lineCount)
     , _matrix(st._matrix)
     , _coords(st._coords)
     , _colors(st._colors)
     , m_primitiveSet(st.m_primitiveSet)
+    , m_box(st.m_box)
     , m_EmGlyphLengthValid(st.m_EmGlyphLengthValid)
     , m_CoordsValid(st.m_CoordsValid)
     , m_ColorsValid(st.m_ColorsValid)
@@ -130,6 +143,10 @@ ShxText::ShxText(const ShxText& st, const osg::CopyOp& copyop)
     setVertexArray(_coords);
     setColorArray(_colors);
     addPrimitiveSet(m_primitiveSet);
+    if (_showBox)
+    {
+        addPrimitiveSet(m_box);
+    }
     setUseVertexBufferObjects(true);
     
     setUpdateCallback(s_ShxTextCallback);
@@ -305,6 +322,23 @@ void ShxText::build()
                     cur += _lineStops[i] + 1;
                 }
             }
+            m_box = new osg::DrawArrays();
+            int first = int(_coords->size());
+            double len = emLength();
+            double margin = _margin / _characterHeight * m_EmHeight;
+            osg::Vec2f lb2(-margin, -margin);
+            _coords->push_back(lb2);
+            lb2.x() = len + margin;
+            _coords->push_back(lb2);
+            lb2.y() = m_EmHeight * (1 + _lineSpacing * (_lineCount - 1)) + margin;
+            _coords->push_back(lb2);
+            lb2.x() = -margin;
+            _coords->push_back(lb2);
+            m_box->set(GL_LINE_LOOP, first, 4);
+            if (_showBox)
+            {
+                const_cast<ShxText*>(this)->addPrimitiveSet(m_box);
+            }
         }
 
         _coords->dirty();
@@ -368,6 +402,13 @@ void ShxText::setLineSpacing(float lineSpacing)
         _lineSpacing = lineSpacing;
         if (_lineCount > 1)
             m_MatrixValid = false;
+        if (m_box && m_box->getCount() == 4)
+        {
+            int first = m_box->getFirst();
+            osg::Vec2f lb2;
+            double margin = _margin / _characterHeight * m_EmHeight;
+            (*_coords)[first + 2].y() = (*_coords)[first + 3].y() = m_EmHeight * (1 + _lineSpacing * (_lineCount - 1)) + margin;
+        }
     }
 }
 
@@ -403,6 +444,42 @@ void ShxText::setAutoRotateToScreen(bool autoRotateToScreen)
     {
         _autoRotateToScreen = autoRotateToScreen;
         m_MatrixValid = false;
+    }
+}
+
+void ShxText::showBox(bool val)
+{
+    if (_showBox != val)
+    {
+        _showBox = val;
+        if (val)
+        {
+            addPrimitiveSet(m_box);
+        }
+        else
+        {
+            int num = getPrimitiveSetIndex(m_box);
+            removePrimitiveSet(num);
+        }
+    }
+}
+
+void ShxText::setBoxMargin(float m)
+{
+    if (m != _margin)
+    {
+        _margin = m;
+        if (m_box && m_box->getCount() == 4)
+        {
+            int first = m_box->getFirst();
+            double len = emLength();
+            double margin = _margin / _characterHeight * m_EmHeight;
+            float y = m_EmHeight * (1 + _lineSpacing * (_lineCount - 1)) + margin;
+            (*_coords)[first] = osg::Vec2f(-margin, -margin);
+            (*_coords)[first+1] = osg::Vec2f(len + margin, -margin);
+            (*_coords)[first+2] = osg::Vec2f(len + margin, y);
+            (*_coords)[first+3] = osg::Vec2f(-margin, y);
+        }
     }
 }
 

@@ -107,6 +107,9 @@ public:
     void setAutoRotateToScreen(bool autoRotateToScreen);
     bool getAutoRotateToScreen() const { return _autoRotateToScreen; }
 
+    void showBox(bool val);
+    void setBoxMargin(float m);
+
     /** Get the number of wrapped lines - only valid after computeGlyphRepresentation() has been called, returns 0 otherwise */
     unsigned int getLineCount() const { return _lineCount; }
 
@@ -137,6 +140,8 @@ private:
     AlignmentType                           _alignment;
     osg::Quat                               _rotation;
     bool                                    _autoRotateToScreen;
+    bool                                    _showBox;
+    float                                   _margin;
     unsigned int                            _lineCount;
     std::vector<int>                        _lineStops;
 
@@ -145,6 +150,7 @@ private:
     mutable Coords                          _coords;
     mutable osg::ref_ptr<osg::Vec3Array>    _colors;
 	mutable osg::ref_ptr<osg::MultiDrawArrays> m_primitiveSet;
+	mutable osg::ref_ptr<osg::DrawArrays> m_box;
 
 	mutable bool m_EmGlyphLengthValid;
 	mutable bool m_CoordsValid;
